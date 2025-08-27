@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import Card from "./Card";
 import { FaArrowCircleLeft, FaArrowCircleRight } from "react-icons/fa";
 import SearchBar from "./SearchBar";
+import useAppStore from "../store/useAppStore";
 
 export default function TopRest() {
   const [data, setData] = useState([]);
   const [filtered, setFiltered] = useState([]);
+
+  const { query, filter } = useAppStore(); 
 
   const fetchTopRestaurant = async () => {
     const response = await fetch("/restaurantChains.json");
@@ -18,38 +21,32 @@ export default function TopRest() {
     fetchTopRestaurant();
   }, []);
 
-  const handleSearch = (query) => {
-    if (!query) {
-      setFiltered(data);
-    } else {
-      setFiltered(
-        data.filter((res) =>
-          res.title.toLowerCase().includes(query.toLowerCase())
-        )
+  useEffect(() => {
+    let result = [...data];
+
+    if (query) {
+      result = result.filter((res) =>
+        res.title.toLowerCase().includes(query.toLowerCase())
       );
     }
-  };
 
-  const handleFilter = (filterType) => {
-    let filteredData = [...data];
-
-    if (filterType === "rating") {
-      filteredData = data.filter((res) => res.rating >= 4.5);
-    } else if (filterType === "fast") {
-      filteredData = data.filter((res) => res.minTime <= 30);
-    } else if (filterType === "veg") {
-      filteredData = data.filter((res) =>
+    if (filter === "rating") {
+      result = result.filter((res) => res.rating >= 4.5);
+    } else if (filter === "fast") {
+      result = result.filter((res) => res.minTime <= 30);
+    } else if (filter === "veg") {
+      result = result.filter((res) =>
         res.name.toLowerCase().includes("veg")
       );
     }
 
-    setFiltered(filteredData);
-  };
+    setFiltered(result);
+  }, [query, filter, data]); 
 
   return (
     <div className="max-w-[1200px] mx-auto mb-[100px]">
-      {/* 🔍 Search & Filter */}
-      <SearchBar onSearch={handleSearch} onFilter={handleFilter} />
+      {/* Search & Filter */}
+      <SearchBar />
 
       <div className="flex my-3 items-center justify-between">
         <div className="text-[25px] font-bold">
@@ -65,7 +62,6 @@ export default function TopRest() {
         </div>
       </div>
 
-      {}
       <div className="flex flex-wrap gap-5 overflow-hidden">
         {filtered.length > 0 ? (
           filtered.map((d, i) => <Card {...d} key={i} />)
